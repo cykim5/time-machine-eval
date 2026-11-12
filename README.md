@@ -96,6 +96,29 @@ That sentence is the whole method in one line: a January 2023 freeze, a post-fre
 
 A fuller write-up is in [docs/geneius-worked-example.md](docs/geneius-worked-example.md).
 
+## Real data check: ClinVar moves a lot
+
+The argument above rests on a claim that databases change. This repo
+checks that claim against real data. Comparing two ClinVar releases,
+January 2025 and November 2026, about 22 months apart:
+
+- A third of the variants in the newer release (1,593,904 of
+  4,707,240) did not exist in the older one. The database grows
+  fast.
+- Only 1,939 of the 1,508,670 variants that were uncertain in
+  January 2025 had a clean pathogenic or benign answer by November
+  2026. Resolutions are rare and slow, which is why a time-frozen
+  test set has to pool across many genes and a long window.
+- Labels almost never flip sides: only 3 variants in over 3 million
+  moved between pathogenic and benign.
+
+These counts measure the database's own churn, not any model's
+performance. The full write-up, with the exact release files, the
+counting rules, and the complete transition table, is in
+[docs/clinvar-reality-check.md](docs/clinvar-reality-check.md), and
+the check itself is runnable with
+`python3 examples/clinvar_reality_check.py --download`.
+
 ## Run the demo
 
 The repo includes a tiny made-up example so you can see the pattern work in a few seconds. It uses only the Python standard library.
@@ -106,18 +129,49 @@ python3 examples/synthetic_example.py
 
 It builds fake records dated before and after a cutoff, freezes the input, builds a test set from the later records, then prints hits@K for a fake model ranking and a fake baseline ranking.
 
+## Run the tests
+
+The test suite uses only the standard library unittest, so there is nothing extra to install. From the repository root:
+
+```
+python3 -m unittest discover tests
+```
+
+The tests cover the cutoff filter, the holdout builder, hits@K (including a boundary case where two answers sit either side of K, a ranking shorter than K, and a ranking that repeats an ID), the model vs baseline comparison, and date parsing edge cases. A small GitHub Actions workflow (`.github/workflows/test.yml`) runs the same suite plus the synthetic demo on every push to main and every pull request.
+
+## Install the module
+
+To use the pattern in your own project, install the package in development mode from the repository root:
+
+```
+pip install -e .
+```
+
+Then import it directly:
+
+```python
+from time_machine_eval import filter_to_cutoff, build_holdout, hits_at_k, evaluate
+```
+
 ## Repository structure
 
 ```
 time-machine-eval/
   README.md                      this file
+  pyproject.toml                 makes the module installable (pip install -e .)
+  .github/workflows/test.yml     runs the tests and the demo on push and PR
   docs/
     geneius-worked-example.md    the Gene-ius evaluation, written up in full
+    clinvar-reality-check.md     real ClinVar churn between two releases
     substack-post-draft.md       a draft blog version of this explainer
   src/
+    __init__.py                  exports the main functions
     time_machine_eval.py         the reusable pattern: freeze, holdout, hits@K
+  tests/
+    test_time_machine_eval.py    standard library unittest suite
   examples/
     synthetic_example.py         a small made-up dataset that runs end to end
+    clinvar_reality_check.py     the real data check, runnable on two releases
 ```
 
 ## Limits of this template
