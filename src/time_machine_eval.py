@@ -104,6 +104,9 @@ def hits_at_k(
 ) -> int:
     """Count how many holdout IDs appear in the top ``k`` of a ranking.
 
+    Each holdout ID counts at most once, even if the ranking repeats
+    it, so a duplicated ID can never inflate the score.
+
     Args:
         ranked_ids: Candidate IDs, best first.
         holdout_ids: The set of true answer IDs (from ``build_holdout``).
@@ -111,12 +114,13 @@ def hits_at_k(
             ranking are allowed and simply score the whole list.
 
     Returns:
-        The number of holdout IDs found in the first ``k`` positions.
+        The number of distinct holdout IDs found in the first
+        ``k`` positions.
     """
     if k < 0:
         raise ValueError("k must be zero or positive")
-    top = list(ranked_ids[:k])
-    return sum(1 for item in top if item in holdout_ids)
+    top = set(ranked_ids[:k])
+    return len(top & set(holdout_ids))
 
 
 def evaluate(
