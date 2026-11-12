@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "time-machine-eval"
+version = "0.1.0"
+description = "Time-frozen evaluation for bio AI models: freeze inputs at a cutoff date, grade on labels resolved after it."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools]
+py-modules = ["time_machine_eval"]
+
+[tool.setuptools.package-dir]
+"" = "src"
